@@ -15,7 +15,7 @@ const firebaseConfig = {
 
 // Инициализация Firebase
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, onSnapshot, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, query, where, orderBy, onSnapshot, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 // Инициализация Firebase приложения
@@ -30,6 +30,8 @@ export {
     collection,
     addDoc,
     getDocs,
+    doc,
+    deleteDoc,
     query,
     where,
     orderBy,
