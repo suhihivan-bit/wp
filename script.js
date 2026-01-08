@@ -1,24 +1,118 @@
 // ==========================================
+// FIREBASE IMPORT
+// ==========================================
+import { db, collection, addDoc, getDocs, query, where, Timestamp, COLLECTIONS } from './firebase-config.js';
+
+// ==========================================
 // BOOKING MANAGEMENT SYSTEM
 // ==========================================
 
-// Initialize bookings storage
+// Initialize bookings storage (keep for backwards compatibility and offline drafts)
 const BOOKINGS_KEY = 'consultationBookings';
 
-function getBookings() {
+// Get bookings from localStorage (legacy - for migration only)
+function getBookingsFromLocalStorage() {
     const bookings = localStorage.getItem(BOOKINGS_KEY);
     return bookings ? JSON.parse(bookings) : [];
 }
 
-function saveBooking(date, time, formData) {
-    const bookings = getBookings();
-    bookings.push({
-        date: date,
-        time: time,
-        data: formData,
-        timestamp: new Date().toISOString()
-    });
-    localStorage.setItem(BOOKINGS_KEY, JSON.stringify(bookings));
+// Save booking to Firebase Firestore
+async function saveBooking(date, time, formData) {
+    try {
+        // Save to Firestore
+        const docRef = await addDoc(collection(db, COLLECTIONS.BOOKINGS), {
+            // Дата и время
+            date: date,
+            time: time,
+
+            // Личные данные
+            fullName: formData.fullName,
+            email: formData.email,
+            phone: formData.phone,
+
+            // Категория
+            category: formData.category,
+
+            // Мессенджер
+            messenger: formData.messenger,
+            messengerHandle: formData.messengerHandle || '',
+
+            // Вопросы
+            questions: formData.questions || '',
+
+            // Метаданные
+            status: 'pending',
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now()
+        });
+
+        console.log('✅ Booking saved to Firebase with ID:', docRef.id);
+        return docRef.id;
+
+    } catch (error) {
+        console.error('❌ Error saving to Firebase:', error);
+
+        // Fallback to localStorage if Firebase fails
+        const localBookings = getBookingsFromLocalStorage();
+        localBookings.push({
+            date: date,
+            time: time,
+            data: formData,
+            timestamp: new Date().toISOString()
+        });
+        localStorage.setItem(BOOKINGS_KEY, JSON.stringify(localBookings));
+
+        throw new Error('Не удалось сохранить запись. Попробуйте ещё раз.');
+    }
+}
+
+// Check if time slot is occupied (from Firestore)
+async function isTimeSlotOccupied(date, time) {
+    try {
+        const q = query(
+            collection(db, COLLECTIONS.BOOKINGS),
+            where('date', '==', date),
+            where('time', '==', time),
+            where('status', '!=', 'cancelled')
+        );
+
+        const querySnapshot = await getDocs(q);
+        return !querySnapshot.empty;
+
+    } catch (error) {
+        console.error('❌ Error checking time slot:', error);
+        // Fallback to localStorage
+        const localBookings = getBookingsFromLocalStorage();
+        return localBookings.some(booking => booking.date === date && booking.time === time);
+    }
+}
+
+// Get occupied times for a specific date (from Firestore)
+async function getOccupiedTimesForDate(date) {
+    try {
+        const q = query(
+            collection(db, COLLECTIONS.BOOKINGS),
+            where('date', '==', date),
+            where('status', '!=', 'cancelled')
+        );
+
+        const querySnapshot = await getDocs(q);
+        const occupiedTimes = [];
+
+        querySnapshot.forEach((doc) => {
+            occupiedTimes.push(doc.data().time);
+        });
+
+        return occupiedTimes;
+
+    } catch (error) {
+        console.error('❌ Error getting occupied times:', error);
+        // Fallback to localStorage
+        const localBookings = getBookingsFromLocalStorage();
+        return localBookings
+            .filter(booking => booking.date === date)
+            .map(booking => booking.time);
+    }
 }
 
 function isTimeSlotOccupied(date, time) {
@@ -136,11 +230,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }));
 
     // Update available time slots when date changes
-    dateInput.addEventListener('change', function () {
-        updateAvailableTimeSlots();
+    dateInput.addEventListener('change', async function () {
+        await updateAvailableTimeSlots();
     });
 
-    function updateAvailableTimeSlots() {
+    async function updateAvailableTimeSlots() {
         const selectedDate = dateInput.value;
         if (!selectedDate) {
             // Reset to all options if no date selected
@@ -148,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const occupiedTimes = getOccupiedTimesForDate(selectedDate);
+        const occupiedTimes = await getOccupiedTimesForDate(selectedDate);
         const currentValue = timeSelect.value;
 
         // Clear all options except placeholder
@@ -246,8 +340,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Form submission
-    form.addEventListener('submit', function (e) {
+    // Form submission (async for Firebase)
+    form.addEventListener('submit', async function (e) {
         e.preventDefault();
 
         if (!form.checkValidity()) {
@@ -258,40 +352,57 @@ document.addEventListener('DOMContentLoaded', function () {
         const selectedDate = dateInput.value;
         const selectedTime = timeSelect.value;
 
-        // Check if time slot is occupied
-        if (isTimeSlotOccupied(selectedDate, selectedTime)) {
-            showErrorModal('Это время уже занято!', 'Пожалуйста, выберите другое время для консультации.');
-            return;
+        // Disable submit button during save
+        const submitButton = document.getElementById('submitButton');
+        const originalButtonText = submitButton.querySelector('.button-text').textContent;
+        submitButton.disabled = true;
+        submitButton.querySelector('.button-text').textContent = 'Сохранение...';
+
+        try {
+            // Check if time slot is occupied (async)
+            const isOccupied = await isTimeSlotOccupied(selectedDate, selectedTime);
+            if (isOccupied) {
+                showErrorModal('Это время уже занято!', 'Пожалуйста, выберите другое время для консультации.');
+                submitButton.disabled = false;
+                submitButton.querySelector('.button-text').textContent = originalButtonText;
+                return;
+            }
+
+            // Collect form data
+            const formData = {
+                date: selectedDate,
+                time: selectedTime,
+                category: document.querySelector('input[name="category"]:checked').value,
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                messenger: document.querySelector('input[name="messenger"]:checked').value,
+                messengerHandle: document.getElementById('messengerHandle').value || '',
+                questions: document.getElementById('questions').value
+            };
+
+            // Save booking to Firebase
+            const bookingId = await saveBooking(selectedDate, selectedTime, formData);
+
+            console.log('✅ Booking submitted successfully:', bookingId);
+
+            // Show success modal with booking data
+            showModal(formData);
+
+            // Reset form
+            form.reset();
+
+            // Update available slots after booking
+            await updateAvailableTimeSlots();
+
+        } catch (error) {
+            console.error('Error submitting booking:', error);
+            showErrorModal('Ошибка сохранения', error.message || 'Не удалось сохранить запись. Попробуйте ещё раз.');
+        } finally {
+            // Re-enable submit button
+            submitButton.disabled = false;
+            submitButton.querySelector('.button-text').textContent = originalButtonText;
         }
-
-        // Collect form data
-        const formData = {
-            date: selectedDate,
-            time: selectedTime,
-            category: document.querySelector('input[name="category"]:checked').value,
-            fullName: document.getElementById('fullName').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            messenger: document.querySelector('input[name="messenger"]:checked').value,
-            messengerHandle: document.getElementById('messengerHandle').value || '',
-            questions: document.getElementById('questions').value
-        };
-
-        // Save booking to localStorage
-        saveBooking(selectedDate, selectedTime, formData);
-
-        // Log to console (in production, this would send to a server)
-        console.log('Booking submitted:', formData);
-        console.log('All bookings:', getBookings());
-
-        // Show success modal with booking data
-        showModal(formData);
-
-        // Reset form
-        form.reset();
-
-        // Update available slots after booking
-        updateAvailableTimeSlots();
     });
 
     // Modal functions
