@@ -188,8 +188,17 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
-    <script src="admin.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <!-- Firebase Config -->
+    <script type="module" src="firebase-config.js"></script>
+
+    <!-- Admin Panel Script (as module to use Firebase) -->
+    <script type="module" src="admin.js"></script>
+
 </body>
 
 </html>
