@@ -115,20 +115,6 @@ async function getOccupiedTimesForDate(date) {
     }
 }
 
-function isTimeSlotOccupied(date, time) {
-    const bookings = getBookings();
-    return bookings.some(booking => booking.date === date && booking.time === time);
-}
-
-function getOccupiedTimesForDate(date) {
-    const bookings = getBookings();
-    return bookings
-        .filter(booking => booking.date === date)
-        .map(booking => booking.time);
-}
-
-// Make functions globally available for calendar.js
-window.getOccupiedTimesForDate = getOccupiedTimesForDate;
 
 
 // ==========================================
