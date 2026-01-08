@@ -2,185 +2,186 @@
 // FIREBASE IMPORTS
 // ==========================================
 import { db, collection, query, getDocs, deleteDoc, doc, onSnapshot, orderBy, Timestamp, COLLECTIONS } from './firebase-config.js';
+import { checkAuthState, logoutAdmin } from './auth.js';
 
 // ==========================================
 // AUTHENTICATION CHECK
 // ==========================================
 
-// Check if user is authenticated
-function checkAuth() {
-    const sessionStr = localStorage.getItem('adminSession');
+console.log('🔐 Checking authentication...');
 
-    if (!sessionStr) {
-        window.location.href = 'login.html';
-        return false;
+// Check authentication and initialize admin panel
+checkAuthState((user) => {
+    if (!user) {
+        console.log('❌ Not authenticated, redirecting to login...');
+        window.location.href = '/login.html';
+        return;
     }
 
-    try {
-        const session = JSON.parse(sessionStr);
-        const expiresAt = new Date(session.expiresAt);
-        const now = new Date();
+    console.log('✅ Authenticated as:', user.email);
 
-        if (now > expiresAt) {
-            // Session expired
-            localStorage.removeItem('adminSession');
-            window.location.href = 'login.html';
-            return false;
+    // Display admin email
+    const adminEmailEl = document.getElementById('adminEmail');
+    if (adminEmailEl) {
+        adminEmailEl.textContent = user.email;
+    }
+
+    // Initialize admin panel
+    initializeAdminPanel();
+});
+
+// Logout handler
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            await logoutAdmin();
+            window.location.href = '/login.html';
+        } catch (error) {
+            console.error('❌ Logout error:', error);
+            alert('Ошибка при выходе. Попробуйте снова.');
         }
-
-        return true;
-    } catch (e) {
-        localStorage.removeItem('adminSession');
-        window.location.href = 'login.html';
-        return false;
-    }
-}
-
-// Logout function
-function logout() {
-    localStorage.removeItem('adminSession');
-    window.location.href = 'login.html';
-}
-
-// Make logout globally available
-window.logout = logout;
-
-// Check auth immediately
-if (!checkAuth()) {
-    // Will redirect if not authenticated
+    });
 }
 
 // ==========================================
-// ADMIN PANEL - BOOKINGS MANAGEMENT
+// ADMIN PANEL INITIALIZATION
 // ==========================================
 
-// Module scripts load after DOM is ready, so no need for DOMContentLoaded
-let allBookings = [];
-let confirmCallback = null;
-let unsubscribe = null; // For realtime listener cleanup
+function initializeAdminPanel() {
+    console.log('📊 Initializing admin panel...');
 
-// Elements
-const tableBody = document.getElementById('bookingsTableBody');
-const emptyState = document.getElementById('emptyState');
-const searchInput = document.getElementById('searchInput');
-const exportAllBtn = document.getElementById('exportAllBtn');
-const clearAllBtn = document.getElementById('clearAllBtn');
-const confirmModal = document.getElementById('confirmModal');
-const confirmTitle = document.getElementById('confirmTitle');
-const confirmMessage = document.getElementById('confirmMessage');
-const confirmBtn = document.getElementById('confirmBtn');
-const cancelBtn = document.getElementById('cancelBtn');
+    // ==========================================
+    // ADMIN PANEL - BOOKINGS MANAGEMENT
+    // ==========================================
 
-// Stats elements
-const totalBookingsEl = document.getElementById('totalBookings');
-const upcomingBookingsEl = document.getElementById('upcomingBookings');
-const applicantCountEl = document.getElementById('applicantCount');
+    // Module scripts load after DOM is ready, so no need for DOMContentLoaded
+    let allBookings = [];
+    let confirmCallback = null;
+    let unsubscribe = null; // For realtime listener cleanup
 
-// Load and display bookings from Firestore (with realtime updates)
-function loadBookings() {
-    console.log('📊 Setting up Firestore realtime listener...');
+    // Elements
+    const tableBody = document.getElementById('bookingsTableBody');
+    const emptyState = document.getElementById('emptyState');
+    const searchInput = document.getElementById('searchInput');
+    const exportAllBtn = document.getElementById('exportAllBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
 
-    // Create query to get bookings ordered by date and time
-    const q = query(
-        collection(db, COLLECTIONS.BOOKINGS),
-        orderBy('createdAt', 'desc')
-    );
+    // Stats elements
+    const totalBookingsEl = document.getElementById('totalBookings');
+    const upcomingBookingsEl = document.getElementById('upcomingBookings');
+    const applicantCountEl = document.getElementById('applicantCount');
 
-    // Set up realtime listener
-    unsubscribe = onSnapshot(q, (querySnapshot) => {
-        allBookings = [];
+    // Load and display bookings from Firestore (with realtime updates)
+    function loadBookings() {
+        console.log('📊 Setting up Firestore realtime listener...');
 
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            allBookings.push({
-                id: doc.id,  // Firestore document ID
-                date: data.date,
-                time: data.time,
-                data: {
-                    fullName: data.fullName,
-                    email: data.email,
-                    phone: data.phone,
-                    category: data.category,
-                    messenger: data.messenger,
-                    messengerHandle: data.messengerHandle,
-                    questions: data.questions,
-                    status: data.status || 'pending'
-                }
+        // Create query to get bookings ordered by date and time
+        const q = query(
+            collection(db, COLLECTIONS.BOOKINGS),
+            orderBy('createdAt', 'desc')
+        );
+
+        // Set up realtime listener
+        unsubscribe = onSnapshot(q, (querySnapshot) => {
+            allBookings = [];
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                allBookings.push({
+                    id: doc.id,  // Firestore document ID
+                    date: data.date,
+                    time: data.time,
+                    data: {
+                        fullName: data.fullName,
+                        email: data.email,
+                        phone: data.phone,
+                        category: data.category,
+                        messenger: data.messenger,
+                        messengerHandle: data.messengerHandle,
+                        questions: data.questions,
+                        status: data.status || 'pending'
+                    }
+                });
             });
-        });
 
-        console.log(`✅ Loaded ${allBookings.length} bookings from Firestore`);
-        updateStats();
-        renderBookings(allBookings);
-    }, (error) => {
-        console.error('❌ Error loading bookings from Firestore:', error);
-        // Show error to user
-        if (tableBody) {
-            tableBody.innerHTML = `
+            console.log(`✅ Loaded ${allBookings.length} bookings from Firestore`);
+            updateStats();
+            renderBookings(allBookings);
+        }, (error) => {
+            console.error('❌ Error loading bookings from Firestore:', error);
+            // Show error to user
+            if (tableBody) {
+                tableBody.innerHTML = `
                 <tr>
                     <td colspan="6" style="text-align: center; color: #ff4444; padding: 2rem;">
                         ⚠️ Ошибка загрузки данных из Firebase. Проверьте подключение.
                     </td>
                 </tr>
             `;
-        }
-    });
-}
-
-// Update statistics
-function updateStats() {
-    const total = allBookings.length;
-    const now = new Date();
-    const upcoming = allBookings.filter(booking => {
-        const bookingDate = new Date(booking.date + 'T' + booking.time);
-        return bookingDate > now;
-    }).length;
-    const applicants = allBookings.filter(booking => booking.data.category === 'applicant').length;
-
-    totalBookingsEl.textContent = total;
-    upcomingBookingsEl.textContent = upcoming;
-    applicantCountEl.textContent = applicants;
-}
-
-// Render bookings table
-function renderBookings(bookings) {
-    if (bookings.length === 0) {
-        tableBody.innerHTML = '';
-        emptyState.classList.add('active');
-        return;
+            }
+        });
     }
 
-    emptyState.classList.remove('active');
+    // Update statistics
+    function updateStats() {
+        const total = allBookings.length;
+        const now = new Date();
+        const upcoming = allBookings.filter(booking => {
+            const bookingDate = new Date(booking.date + 'T' + booking.time);
+            return bookingDate > now;
+        }).length;
+        const applicants = allBookings.filter(booking => booking.data.category === 'applicant').length;
 
-    // Sort by date and time (newest first)
-    const sortedBookings = [...bookings].sort((a, b) => {
-        const dateA = new Date(a.date + 'T' + a.time);
-        const dateB = new Date(b.date + 'T' + b.time);
-        return dateB - dateA;
-    });
+        totalBookingsEl.textContent = total;
+        upcomingBookingsEl.textContent = upcoming;
+        applicantCountEl.textContent = applicants;
+    }
 
-    tableBody.innerHTML = sortedBookings.map((booking) => {
-        const { date, time, data, id } = booking;
-        const categoryText = data.category === 'applicant' ? 'Абитуриент' : 'Родитель';
-        const categoryClass = data.category === 'applicant' ? 'category-applicant' : 'category-parent';
-        const questions = data.questions || 'Нет вопросов';
-        const hasQuestions = data.questions && data.questions.trim() !== '';
+    // Render bookings table
+    function renderBookings(bookings) {
+        if (bookings.length === 0) {
+            tableBody.innerHTML = '';
+            emptyState.classList.add('active');
+            return;
+        }
 
-        // Format messenger
-        const messengerIcons = {
-            telegram: '📱 Telegram',
-            whatsapp: '💬 WhatsApp',
-            viber: '📞 Viber',
-            none: '✉️ Email'
-        };
-        const messengerText = messengerIcons[data.messenger] || messengerIcons.none;
-        const messengerHandle = data.messengerHandle || '';
+        emptyState.classList.remove('active');
 
-        // Format date
-        const [year, month, day] = date.split('-');
-        const formattedDate = `${day}.${month}.${year}`;
+        // Sort by date and time (newest first)
+        const sortedBookings = [...bookings].sort((a, b) => {
+            const dateA = new Date(a.date + 'T' + a.time);
+            const dateB = new Date(b.date + 'T' + b.time);
+            return dateB - dateA;
+        });
 
-        return `
+        tableBody.innerHTML = sortedBookings.map((booking) => {
+            const { date, time, data, id } = booking;
+            const categoryText = data.category === 'applicant' ? 'Абитуриент' : 'Родитель';
+            const categoryClass = data.category === 'applicant' ? 'category-applicant' : 'category-parent';
+            const questions = data.questions || 'Нет вопросов';
+            const hasQuestions = data.questions && data.questions.trim() !== '';
+
+            // Format messenger
+            const messengerIcons = {
+                telegram: '📱 Telegram',
+                whatsapp: '💬 WhatsApp',
+                viber: '📞 Viber',
+                none: '✉️ Email'
+            };
+            const messengerText = messengerIcons[data.messenger] || messengerIcons.none;
+            const messengerHandle = data.messengerHandle || '';
+
+            // Format date
+            const [year, month, day] = date.split('-');
+            const formattedDate = `${day}.${month}.${year}`;
+
+            return `
             <tr data-booking-id="${id}">
                 <td>
                     <div class="booking-date">${formattedDate}</div>
@@ -218,87 +219,87 @@ function renderBookings(bookings) {
                 </td>
             </tr>
         `;
-    }).join('');
-}
-
-// Search functionality
-searchInput.addEventListener('input', function () {
-    const query = this.value.toLowerCase().trim();
-
-    if (!query) {
-        renderBookings(allBookings);
-        return;
+        }).join('');
     }
 
-    const filtered = allBookings.filter(booking => {
-        const { data } = booking;
-        return (
-            data.fullName.toLowerCase().includes(query) ||
-            data.email.toLowerCase().includes(query) ||
-            data.phone.toLowerCase().includes(query) ||
-            (data.questions && data.questions.toLowerCase().includes(query))
+    // Search functionality
+    searchInput.addEventListener('input', function () {
+        const query = this.value.toLowerCase().trim();
+
+        if (!query) {
+            renderBookings(allBookings);
+            return;
+        }
+
+        const filtered = allBookings.filter(booking => {
+            const { data } = booking;
+            return (
+                data.fullName.toLowerCase().includes(query) ||
+                data.email.toLowerCase().includes(query) ||
+                data.phone.toLowerCase().includes(query) ||
+                (data.questions && data.questions.toLowerCase().includes(query))
+            );
+        });
+
+        renderBookings(filtered);
+    });
+
+    // Export single booking
+    window.exportSingle = function (bookingId) {
+        const booking = allBookings.find(b => b.id === bookingId);
+        if (!booking) {
+            console.error('Booking not found:', bookingId);
+            return;
+        }
+
+        const icsContent = generateICS(booking);
+        downloadICSFile(icsContent, `consultation-${booking.date}-${booking.time.replace(':', '')}.ics`);
+    };
+
+    // Export all bookings
+    exportAllBtn.addEventListener('click', function () {
+        if (allBookings.length === 0) {
+            alert('Нет записей для экспорта');
+            return;
+        }
+
+        showConfirmModal(
+            'Экспорт всех записей',
+            `Скачать ${allBookings.length} ${getBookingsWord(allBookings.length)} в формате .ics для импорта в календарь?`,
+            function () {
+                exportAllToCalendar();
+            }
         );
     });
 
-    renderBookings(filtered);
-});
+    // Export all to calendar
+    function exportAllToCalendar() {
+        allBookings.forEach((booking, index) => {
+            setTimeout(() => {
+                const icsContent = generateICS(booking);
+                downloadICSFile(icsContent, `consultation-${booking.date}-${booking.time.replace(':', '')}-${index + 1}.ics`);
+            }, index * 100); // Stagger downloads to avoid browser blocking
+        });
 
-// Export single booking
-window.exportSingle = function (bookingId) {
-    const booking = allBookings.find(b => b.id === bookingId);
-    if (!booking) {
-        console.error('Booking not found:', bookingId);
-        return;
-    }
-
-    const icsContent = generateICS(booking);
-    downloadICSFile(icsContent, `consultation-${booking.date}-${booking.time.replace(':', '')}.ics`);
-};
-
-// Export all bookings
-exportAllBtn.addEventListener('click', function () {
-    if (allBookings.length === 0) {
-        alert('Нет записей для экспорта');
-        return;
-    }
-
-    showConfirmModal(
-        'Экспорт всех записей',
-        `Скачать ${allBookings.length} ${getBookingsWord(allBookings.length)} в формате .ics для импорта в календарь?`,
-        function () {
-            exportAllToCalendar();
-        }
-    );
-});
-
-// Export all to calendar
-function exportAllToCalendar() {
-    allBookings.forEach((booking, index) => {
+        // Show success message
         setTimeout(() => {
-            const icsContent = generateICS(booking);
-            downloadICSFile(icsContent, `consultation-${booking.date}-${booking.time.replace(':', '')}-${index + 1}.ics`);
-        }, index * 100); // Stagger downloads to avoid browser blocking
-    });
+            alert(`Экспортировано ${allBookings.length} ${getBookingsWord(allBookings.length)}!`);
+        }, allBookings.length * 100 + 200);
+    }
 
-    // Show success message
-    setTimeout(() => {
-        alert(`Экспортировано ${allBookings.length} ${getBookingsWord(allBookings.length)}!`);
-    }, allBookings.length * 100 + 200);
-}
+    // ICS file generation
+    function generateICS(booking) {
+        const { date, time, data } = booking;
+        const startDateTime = new Date(`${date}T${time}:00`);
+        const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // 1 hour duration
 
-// ICS file generation
-function generateICS(booking) {
-    const { date, time, data } = booking;
-    const startDateTime = new Date(`${date}T${time}:00`);
-    const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // 1 hour duration
+        const formatDate = (d) => {
+            return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        };
 
-    const formatDate = (d) => {
-        return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    };
+        const categoryText = data.category === 'applicant' ? 'Абитуриент' : 'Родитель';
 
-    const categoryText = data.category === 'applicant' ? 'Абитуриент' : 'Родитель';
-
-    return `BEGIN:VCALENDAR
+        return `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Consultation Booking//EN
 CALSCALE:GREGORIAN
@@ -313,133 +314,135 @@ LOCATION:Приёмная комиссия
 STATUS:CONFIRMED
 END:VEVENT
 END:VCALENDAR`;
-}
-
-// Delete single booking
-window.deleteBooking = async function (bookingId) {
-    const booking = allBookings.find(b => b.id === bookingId);
-    if (!booking) {
-        console.error('Booking not found:', bookingId);
-        return;
     }
-    const [year, month, day] = booking.date.split('-');
-    const formattedDate = `${day}.${month}.${year}`;
 
-    showConfirmModal(
-        'Удаление записи',
-        `Удалить запись на ${formattedDate} в ${booking.time} для ${booking.data.fullName}?`,
-        async function () {
-            try {
-                await deleteDoc(doc(db, COLLECTIONS.BOOKINGS, bookingId));
-                console.log('✅ Booking deleted:', bookingId);
-                // No need to call loadBookings() - onSnapshot will auto-update
-            } catch (error) {
-                console.error('❌ Error deleting booking:', error);
-                alert('Ошибка при удалении записи. Попробуйте снова.');
-            }
+    // Delete single booking
+    window.deleteBooking = async function (bookingId) {
+        const booking = allBookings.find(b => b.id === bookingId);
+        if (!booking) {
+            console.error('Booking not found:', bookingId);
+            return;
         }
-    );
-};
+        const [year, month, day] = booking.date.split('-');
+        const formattedDate = `${day}.${month}.${year}`;
 
-// Clear all bookings
-clearAllBtn.addEventListener('click', function () {
-    if (allBookings.length === 0) {
-        alert('Нет записей для удаления');
-        return;
-    }
-
-    showConfirmModal(
-        'Внимание!',
-        `Удалить ВСЕ записи (${allBookings.length} ${getBookingsWord(allBookings.length)})? Это действие нельзя отменить!`,
-        async function () {
-            try {
-                // Delete all bookings
-                const deletePromises = allBookings.map(booking =>
-                    deleteDoc(doc(db, COLLECTIONS.BOOKINGS, booking.id))
-                );
-
-                await Promise.all(deletePromises);
-                console.log('✅ All bookings deleted');
-                // No need to call loadBookings() - onSnapshot will auto-update
-            } catch (error) {
-                console.error('❌ Error deleting all bookings:', error);
-                alert('Ошибка при удалении записей. Попробуйте снова.');
+        showConfirmModal(
+            'Удаление записи',
+            `Удалить запись на ${formattedDate} в ${booking.time} для ${booking.data.fullName}?`,
+            async function () {
+                try {
+                    await deleteDoc(doc(db, COLLECTIONS.BOOKINGS, bookingId));
+                    console.log('✅ Booking deleted:', bookingId);
+                    // No need to call loadBookings() - onSnapshot will auto-update
+                } catch (error) {
+                    console.error('❌ Error deleting booking:', error);
+                    alert('Ошибка при удалении записи. Попробуйте снова.');
+                }
             }
+        );
+    };
+
+    // Clear all bookings
+    clearAllBtn.addEventListener('click', function () {
+        if (allBookings.length === 0) {
+            alert('Нет записей для удаления');
+            return;
         }
-    );
-});
 
-// Modal functions
-function showConfirmModal(title, message, callback) {
-    confirmTitle.textContent = title;
-    confirmMessage.textContent = message;
-    confirmCallback = callback;
-    confirmModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
+        showConfirmModal(
+            'Внимание!',
+            `Удалить ВСЕ записи (${allBookings.length} ${getBookingsWord(allBookings.length)})? Это действие нельзя отменить!`,
+            async function () {
+                try {
+                    // Delete all bookings
+                    const deletePromises = allBookings.map(booking =>
+                        deleteDoc(doc(db, COLLECTIONS.BOOKINGS, booking.id))
+                    );
 
-function hideConfirmModal() {
-    confirmModal.classList.remove('active');
-    document.body.style.overflow = '';
-    confirmCallback = null;
-}
+                    await Promise.all(deletePromises);
+                    console.log('✅ All bookings deleted');
+                    // No need to call loadBookings() - onSnapshot will auto-update
+                } catch (error) {
+                    console.error('❌ Error deleting all bookings:', error);
+                    alert('Ошибка при удалении записей. Попробуйте снова.');
+                }
+            }
+        );
+    });
 
-confirmBtn.addEventListener('click', function () {
-    if (confirmCallback) {
-        confirmCallback();
+    // Modal functions
+    function showConfirmModal(title, message, callback) {
+        confirmTitle.textContent = title;
+        confirmMessage.textContent = message;
+        confirmCallback = callback;
+        confirmModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
-    hideConfirmModal();
-});
 
-cancelBtn.addEventListener('click', hideConfirmModal);
+    function hideConfirmModal() {
+        confirmModal.classList.remove('active');
+        document.body.style.overflow = '';
+        confirmCallback = null;
+    }
 
-confirmModal.addEventListener('click', function (e) {
-    if (e.target === confirmModal) {
+    confirmBtn.addEventListener('click', function () {
+        if (confirmCallback) {
+            confirmCallback();
+        }
         hideConfirmModal();
-    }
-});
+    });
 
-// Helper function for proper word form
-function getBookingsWord(count) {
-    const lastDigit = count % 10;
-    const lastTwoDigits = count % 100;
+    cancelBtn.addEventListener('click', hideConfirmModal);
 
-    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    confirmModal.addEventListener('click', function (e) {
+        if (e.target === confirmModal) {
+            hideConfirmModal();
+        }
+    });
+
+    // Helper function for proper word form
+    function getBookingsWord(count) {
+        const lastDigit = count % 10;
+        const lastTwoDigits = count % 100;
+
+        if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+            return 'записей';
+        }
+
+        if (lastDigit === 1) {
+            return 'запись';
+        }
+
+        if (lastDigit >= 2 && lastDigit <= 4) {
+            return 'записи';
+        }
+
         return 'записей';
     }
 
-    if (lastDigit === 1) {
-        return 'запись';
+    // Helper to download ICS file
+    function downloadICSFile(content, filename) {
+        const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     }
 
-    if (lastDigit >= 2 && lastDigit <= 4) {
-        return 'записи';
-    }
+    // Initialize - load bookings with realtime listener
+    loadBookings();
 
-    return 'записей';
+    // Cleanup listener when page unloads
+    window.addEventListener('beforeunload', () => {
+        if (unsubscribe) {
+            unsubscribe();
+        }
+    });
+
+    // Note: No need for setInterval - onSnapshot provides realtime updates automatically!
 }
 
-// Helper to download ICS file
-function downloadICSFile(content, filename) {
-    const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-}
-
-// Initialize - load bookings with realtime listener
-loadBookings();
-
-// Cleanup listener when page unloads
-window.addEventListener('beforeunload', () => {
-    if (unsubscribe) {
-        unsubscribe();
-    }
-});
-
-// Note: No need for setInterval - onSnapshot provides realtime updates automatically!

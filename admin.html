@@ -35,11 +35,11 @@
                     </div>
                     <div>
                         <h1 class="logo-title">Админ-панель</h1>
-                        <p class="logo-subtitle">Управление записями на консультации</p>
+                        <p class="logo-subtitle" id="adminEmail">Загрузка...</p>
                     </div>
                 </div>
                 <div class="header-actions">
-                    <button class="logout-btn" onclick="logout()">
+                    <button class="logout-btn" id="logoutBtn">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
                                 d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
@@ -50,6 +50,17 @@
                                 stroke-linejoin="round" />
                         </svg>
                         Выход
+                    </button>
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    Выход
                     </button>
                     <a href="index.html" class="back-link">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -195,6 +206,9 @@
 
     <!-- Firebase Config -->
     <script type="module" src="firebase-config.js"></script>
+
+    <!-- Authentication Module -->
+    <script type="module" src="auth.js"></script>
 
     <!-- Admin Panel Script (as module to use Firebase) -->
     <script type="module" src="admin.js"></script>
