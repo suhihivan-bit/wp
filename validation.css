@@ -1,0 +1,124 @@
+/* Validation Styles */
+.form-group {
+    position: relative;
+}
+
+.validation-icon {
+    position: absolute;
+    right: var(--spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+    pointer-events: none;
+}
+
+.form-group.has-validation-icon .form-input {
+    padding-right: 3rem;
+}
+
+.validation-icon.success {
+    color: #10b981;
+    opacity: 1;
+}
+
+.validation-icon.error {
+    color: #ef4444;
+    opacity: 1;
+}
+
+.validation-message {
+    display: none;
+    margin-top: var(--spacing-xs);
+    font-size: 0.85rem;
+    color: #ef4444;
+    animation: slideDown 0.2s ease;
+}
+
+.validation-message.show {
+    display: block;
+}
+
+.validation-message.success {
+    color: #10b981;
+}
+
+.form-input.error {
+    border-color: #ef4444;
+    background: hsla(0, 70%, 50%, 0.05);
+}
+
+.form-input.success {
+    border-color: #10b981;
+}
+
+.form-input.validating {
+    border-color: var(--color-primary);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Autosave Indicator */
+.autosave-indicator {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all var(--transition-base);
+    z-index: 1000;
+    box-shadow: var(--shadow-lg);
+}
+
+.autosave-indicator.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.autosave-indicator svg {
+    width: 16px;
+    height: 16px;
+    color: var(--color-primary);
+}
+
+.autosave-text {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.clear-draft-btn {
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    margin-left: var(--spacing-sm);
+}
+
+.clear-draft-btn:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: hsla(0, 70%, 50%, 0.1);
+}

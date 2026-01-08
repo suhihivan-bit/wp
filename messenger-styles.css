@@ -1,0 +1,118 @@
+/* Messenger Selector Styles */
+.messenger-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+}
+
+.messenger-card {
+    position: relative;
+    cursor: pointer;
+}
+
+.messenger-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.messenger-content {
+    background: var(--color-bg-tertiary);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    text-align: center;
+    transition: all var(--transition-base);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.messenger-card:hover .messenger-content {
+    border-color: var(--color-primary);
+    background: hsla(var(--primary-hue), var(--primary-sat), 20%, 0.1);
+    transform: translateY(-2px);
+}
+
+.messenger-card input[type="radio"]:checked~.messenger-content {
+    border-color: var(--color-primary);
+    background: linear-gradient(135deg,
+            hsla(var(--primary-hue), var(--primary-sat), 30%, 0.2),
+            hsla(280, 70%, 30%, 0.15));
+    box-shadow: 0 0 0 2px hsla(var(--primary-hue), var(--primary-sat), var(--primary-light), 0.2);
+}
+
+.messenger-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform var(--transition-base);
+}
+
+.messenger-card:hover .messenger-icon {
+    transform: scale(1.1);
+}
+
+.messenger-icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+.telegram-icon {
+    background: linear-gradient(135deg, #2AABEE, #229ED9);
+    color: white;
+}
+
+.whatsapp-icon {
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    color: white;
+}
+
+.viber-icon {
+    background: linear-gradient(135deg, #7360F2, #5B4DB1);
+    color: white;
+}
+
+.none-icon {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+}
+
+.none-icon svg {
+    color: var(--color-text-secondary);
+}
+
+.messenger-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+
+#messengerHandleGroup {
+    margin-top: var(--spacing-lg);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .messenger-selector {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

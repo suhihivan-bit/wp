@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Запись на консультацию - Приёмная комиссия</title>
+    <meta name="description"
+        content="Записаться на индивидуальную консультацию к приёмной комиссии. Выберите удобное время и получите ответы на все вопросы о поступлении.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="messenger-styles.css">
+    <link rel="stylesheet" href="validation.css">
+    <link rel="stylesheet" href="progress.css">
+    <link rel="stylesheet" href="calendar.css">
+</head>
+
+<body>
+    <div class="background-decoration">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 14L21 9L12 4L3 9L12 14Z" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M21 12L12 17L3 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M21 15L12 20L3 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="logo-title">Приёмная комиссия</h1>
+                    <p class="logo-subtitle">Запись на консультацию</p>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="intro-section">
+                <h2 class="section-title">Индивидуальная консультация</h2>
+                <p class="section-description">
+                    Запишитесь на личную встречу с представителем приёмной комиссии.
+                    Мы ответим на все ваши вопросы о поступлении, программах обучения и условиях приёма.
+                </p>
+            </div>
+
+            <!-- Progress Indicator -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-header">
+                    <span class="progress-title">Заполнение формы</span>
+                    <span class="progress-percentage" id="progressPercentage">0%</span>
+                </div>
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+                </div>
+                <div class="progress-checklist">
+                    <div class="progress-item" id="progressDateTime">
+                        <div class="progress-item-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <span>Дата и время</span>
+                    </div>
+                    <div class="progress-item" id="progressCategory">
+                        <div class="progress-item-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <span>Категория</span>
+                    </div>
+                    <div class="progress-item" id="progressPersonal">
+                        <div class="progress-item-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <span>Личные данные</span>
+                    </div>
+                </div>
+            </div>
+
+            <form class="booking-form" id="bookingForm">
+                <!-- Дата и время -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Выберите дату и время</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="date" class="form-label">
+                                <svg class="label-icon" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor"
+                                        stroke-width="2" />
+                                    <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                                Дата консультации
+                            </label>
+                            <input type="date" id="date" name="date" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="time" class="form-label">
+                                <svg class="label-icon" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+                                    <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                                Время
+                            </label>
+                            <select id="time" name="time" class="form-input" required>
+                                <option value="">Выберите время</option>
+                                <option value="09:00">09:00</option>
+                                <option value="10:00">10:00</option>
+                                <option value="11:00">11:00</option>
+                                <option value="12:00">12:00</option>
+                                <option value="13:00">13:00</option>
+                                <option value="14:00">14:00</option>
+                                <option value="15:00">15:00</option>
+                                <option value="16:00">16:00</option>
+                                <option value="17:00">17:00</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Категория -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Кто придёт на консультацию?</h3>
+                    <div class="category-selector">
+                        <label class="category-card">
+                            <input type="radio" name="category" value="applicant" required>
+                            <div class="category-content">
+                                <div class="category-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <h4 class="category-title">Абитуриент</h4>
+                                <p class="category-description">Я буду поступать</p>
+                            </div>
+                        </label>
+                        <label class="category-card">
+                            <input type="radio" name="category" value="parent" required>
+                            <div class="category-content">
+                                <div class="category-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2" />
+                                        <path
+                                            d="M23 21V19C23 18.1 22.7 17.2 22.2 16.5M16 3.1C17.3 3.8 18 5.3 18 7C18 8.7 17.3 10.2 16 10.9"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                                <h4 class="category-title">Родитель</h4>
+                                <p class="category-description">Родитель абитуриента</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Личные данные -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Личные данные</h3>
+                    <div class="form-group">
+                        <label for="fullName" class="form-label">
+                            <svg class="label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            ФИО
+                        </label>
+                        <input type="text" id="fullName" name="fullName" class="form-input"
+                            placeholder="Иванов Иван Иванович" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email" class="form-label">
+                                <svg class="label-icon" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor"
+                                        stroke-width="2" />
+                                    <path d="M2 7L12 13L22 7" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                                Email
+                            </label>
+                            <input type="email" id="email" name="email" class="form-input" placeholder="example@mail.ru"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone" class="form-label">
+                                <svg class="label-icon" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M22 16.92V19.92C22 20.4696 21.5523 20.9184 21.0039 20.8985C11.0806 20.4687 3.53184 12.9199 3.10149 3.00373C3.08168 2.45531 3.53042 2.00745 4.08 2.00745H7.08C7.35612 2.00745 7.58633 2.21008 7.64889 2.48217C7.79494 3.16637 8.01535 3.83119 8.30702 4.46642C8.41023 4.70939 8.35352 4.99165 8.16348 5.17289L6.67089 6.62358C8.24585 10.063 10.937 12.7547 14.3765 14.3296L15.827 12.8363C16.0083 12.6463 16.2905 12.5896 16.5335 12.6928C17.1687 12.9845 17.8335 13.2049 18.5177 13.3509C18.7899 13.4135 18.9925 13.6437 18.9925 13.9198V16.92C18.9925 17.4696 18.5448 17.9175 17.9964 17.8975Z"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                                Телефон
+                            </label>
+                            <input type="tel" id="phone" name="phone" class="form-input"
+                                placeholder="+7 (___) ___-__-__" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messenger Notification Section -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Уведомления о консультации</h3>
+                    <div class="form-group">
+                        <label class="form-label">
+                            <svg class="label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0035 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.90003C9.87812 3.30496 11.1801 2.99659 12.5 3.00003H13C15.0843 3.11502 17.053 3.99479 18.5291 5.47089C20.0052 6.94699 20.885 8.91568 21 11V11.5Z"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            Выберите мессенджер для напоминаний
+                        </label>
+                        <div class="messenger-selector">
+                            <label class="messenger-card">
+                                <input type="radio" name="messenger" value="telegram">
+                                <div class="messenger-content">
+                                    <div class="messenger-icon telegram-icon">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.64 8.8C16.49 10.38 15.84 14.22 15.51 15.99C15.37 16.74 15.09 16.99 14.83 17.01C14.25 17.07 13.81 16.64 13.25 16.27C12.37 15.69 11.87 15.33 11.02 14.77C10.03 14.12 10.67 13.76 11.24 13.18C11.39 13.03 13.95 10.7 14 10.49C14.0069 10.4582 14.006 10.4252 13.9973 10.3938C13.9886 10.3624 13.9724 10.3337 13.95 10.31C13.89 10.26 13.81 10.28 13.74 10.29C13.65 10.31 12.25 11.24 9.52 13.08C9.12 13.35 8.76 13.49 8.44 13.48C8.08 13.47 7.4 13.28 6.89 13.11C6.26 12.91 5.77 12.8 5.81 12.45C5.83 12.27 6.08 12.09 6.55 11.9C9.47 10.63 11.41 9.79 12.38 9.39C15.16 8.23 15.73 8.03 16.11 8.03C16.19 8.03 16.38 8.05 16.5 8.15C16.6 8.23 16.63 8.34 16.64 8.42C16.63 8.48 16.65 8.66 16.64 8.8Z" />
+                                        </svg>
+                                    </div>
+                                    <span class="messenger-label">Telegram</span>
+                                </div>
+                            </label>
+                            <label class="messenger-card">
+                                <input type="radio" name="messenger" value="whatsapp">
+                                <div class="messenger-content">
+                                    <div class="messenger-icon whatsapp-icon">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M17.472 14.382C17.264 14.277 16.256 13.783 16.064 13.713C15.872 13.643 15.728 13.608 15.584 13.817C15.44 14.025 15.056 14.486 14.928 14.631C14.8 14.775 14.672 14.791 14.464 14.686C14.256 14.581 13.586 14.348 12.773 13.625C12.136 13.062 11.711 12.363 11.583 12.155C11.455 11.947 11.568 11.834 11.672 11.73C11.766 11.636 11.88 11.486 11.984 11.358C12.088 11.23 12.12 11.134 12.19 11.001C12.26 10.868 12.224 10.74 12.172 10.635C12.12 10.53 11.697 9.52 11.537 9.104C11.377 8.688 11.217 8.752 11.089 8.752H10.721C10.577 8.752 10.353 8.804 10.161 9.012C9.969 9.22 9.427 9.714 9.427 10.724C9.427 11.734 10.177 12.713 10.281 12.858C10.385 13.003 11.697 15.068 13.728 15.956C14.256 16.194 14.664 16.33 14.984 16.434C15.512 16.602 15.992 16.578 16.368 16.526C16.792 16.466 17.6 16.019 17.76 15.532C17.92 15.045 17.92 14.653 17.868 14.565C17.816 14.477 17.68 14.419 17.472 14.382ZM12.24 20.452H12.237C10.72 20.452 9.241 20.019 7.96 19.204L7.664 19.026L4.808 19.778L5.576 17.014L5.376 16.703C4.472 15.369 3.976 13.814 3.976 12.206C3.976 7.598 7.632 3.942 12.244 3.942C14.472 3.942 16.568 4.816 18.16 6.408C19.752 8 20.512 10.096 20.512 12.209C20.512 16.817 16.856 20.473 12.24 20.452ZM20.912 3.088C18.848 1.024 16.136 0 12.244 0C5.552 0 0.128 5.424 0.128 12.116C0.128 14.232 0.704 16.296 1.792 18.088L0 24L6.064 22.24C7.776 23.232 9.712 23.752 11.68 23.752H11.684C18.376 23.752 23.8 18.328 23.8 11.636C23.8 7.744 22.776 5.032 20.912 3.088Z" />
+                                        </svg>
+                                    </div>
+                                    <span class="messenger-label">WhatsApp</span>
+                                </div>
+                            </label>
+                            <label class="messenger-card">
+                                <input type="radio" name="messenger" value="viber">
+                                <div class="messenger-content">
+                                    <div class="messenger-icon viber-icon">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M13.04 2.03C13.04 2.03 17.09 2.25 19.5 4.7C19.5 4.7 21.95 7.13 22.17 11.18L22.18 13.04C22.18 13.04 22.35 16.57 19.89 16.57H18.94C18.94 18.73 17.5 18.16 17.5 18.16C13.31 15.86 10.04 12.59 10.04 12.59C6.77 9.32 4.47 5.13 4.47 5.13C3.9 3.86 6.06 3.69 6.06 3.69H7.01C10.54 3.52 10.54 1.06 10.55 2.03H13.04M12.5 0C11.5 0 10.5 0 10.5 0C8.5 0 6.5 2 6.5 2C4.5 4 4.5 6 4.5 7C2 7 2 9.5 2 10.5C2 12.5 4 12.5 4 14.5C4 16.5 6 16.5 8 16.5C8 18.5 10 18.5 12 18.5C14 18.5 14 16.5 14 15.5C16 15.5 16 13.5 16 12.5C18 12.5 18 10.5 18 8.5V7.5C16 5.5 14 5.5 13 5.5C13 3.5 12.5 0 12.5 0M12 5C15 5 15 8 15 9C17 9 17 11 17 11C17 12 16 12 16 14C14 14 13 14 12 14V16C10 16 10 14 10 13C8 13 8 11 8 10C8 8 10 8 10 6C10 5 12 5 12 5Z" />
+                                        </svg>
+                                    </div>
+                                    <span class="messenger-label">Viber</span>
+                                </div>
+                            </label>
+                            <label class="messenger-card">
+                                <input type="radio" name="messenger" value="none" checked>
+                                <div class="messenger-content">
+                                    <div class="messenger-icon none-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                            <path
+                                                d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                        </svg>
+                                    </div>
+                                    <span class="messenger-label">Только email</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group" id="messengerHandleGroup" style="display: none;">
+                        <label for="messengerHandle" class="form-label">
+                            <svg class="label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M16 8C16 10.21 14.21 12 12 12C9.79 12 8 10.21 8 8C8 5.79 9.79 4 12 4C14.21 4 16 5.79 16 8Z"
+                                    stroke="currentColor" stroke-width="2" />
+                                <path d="M12 14C8.69 14 6 16.69 6 20H18C18 16.69 15.31 14 12 14Z" stroke="currentColor"
+                                    stroke-width="2" />
+                            </svg>
+                            <span id="messengerHandleLabel">Ваш никнейм в мессенджере</span>
+                        </label>
+                        <input type="text" id="messengerHandle" class="form-input"
+                            placeholder="@username или номер телефона">
+                    </div>
+                </div>
+
+                <!-- Вопросы -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Предварительные вопросы</h3>
+                    <div class="form-group">
+                        <label for="questions" class="form-label">
+                            <svg class="label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            Ваши вопросы (необязательно)
+                        </label>
+                        <textarea id="questions" name="questions" class="form-textarea" rows="4"
+                            placeholder="Опишите вопросы, которые вы хотели бы обсудить на консультации..."></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-button" id="submitButton">
+                    <span class="button-text">Записаться на консультацию</span>
+                    <svg class="button-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </form>
+        </main>
+
+        <footer class="footer">
+            <p class="footer-text">
+                <a href="login.html" class="admin-link">Админ-панель</a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Autosave Indicator -->
+    <div class="autosave-indicator" id="autosaveIndicator">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+                d="M19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16L21 8V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21Z"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M17 21V13H7V21" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+            <path d="M7 3V8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="autosave-text">Черновик сохранён</span>
+        <button type="button" class="clear-draft-btn" id="clearDraftBtn">Очистить</button>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-icon success-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                    <path d="M8 12L11 15L16 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </div>
+            <h3 class="modal-title">Запись успешно оформлена!</h3>
+            <p class="modal-message">Вы успешно записаны на консультацию. Подробности отправлены на указанный email.</p>
+            <button class="modal-button" id="closeModal">Закрыть</button>
+        </div>
+    </div>
+
+    <script src="calendar.js"></script>
+    <script src="form-enhancements.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
