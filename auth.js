@@ -109,7 +109,7 @@ if (window.location.pathname.includes('login.html')) {
     checkAuthState((user) => {
         if (user) {
             console.log('✅ Already logged in, redirecting to admin panel...');
-            window.location.href = '/admin.html';
+            window.location.href = 'admin.html';
         }
     });
 
@@ -142,7 +142,7 @@ if (window.location.pathname.includes('login.html')) {
             try {
                 await loginAdmin(email, password);
                 // Redirect will happen automatically via onAuthStateChanged
-                window.location.href = '/admin.html';
+                window.location.href = 'admin.html';
             } catch (error) {
                 // Show error
                 if (errorMessage) {

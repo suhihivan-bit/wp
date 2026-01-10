@@ -14,7 +14,7 @@ console.log('🔐 Checking authentication...');
 checkAuthState((user) => {
     if (!user) {
         console.log('❌ Not authenticated, redirecting to login...');
-        window.location.href = '/login.html';
+        window.location.href = 'login.html';
         return;
     }
 
@@ -36,7 +36,7 @@ if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
         try {
             await logoutAdmin();
-            window.location.href = '/login.html';
+            window.location.href = 'login.html';
         } catch (error) {
             console.error('❌ Logout error:', error);
             alert('Ошибка при выходе. Попробуйте снова.');
