@@ -347,6 +347,15 @@ document.addEventListener('DOMContentLoaded', function () {
         submitButton.querySelector('.button-text').textContent = 'Сохранение...';
 
         try {
+            // Bot protection: Check honeypot field
+            const honeypot = document.getElementById('website');
+            if (honeypot && honeypot.value !== '') {
+                console.warn('🤖 Bot detected - honeypot field filled');
+                submitButton.disabled = false;
+                submitButton.querySelector('.button-text').textContent = originalButtonText;
+                return; // Silently reject (don't show error to bot)
+            }
+
             // Check if time slot is occupied (async)
             const isOccupied = await isTimeSlotOccupied(selectedDate, selectedTime);
             if (isOccupied) {
