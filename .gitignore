@@ -39,3 +39,8 @@ node_modules/
 *.njsproj
 *.sln
 *.sw?
+
+# Server-specific
+server/.env
+server/node_modules/
+server/logs/
