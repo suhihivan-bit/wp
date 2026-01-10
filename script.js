@@ -283,9 +283,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 messengerHandleGroup.style.display = 'none';
                 messengerHandleInput.removeAttribute('required');
                 messengerHandleInput.value = '';
+                // Remove asterisk from label
+                messengerHandleLabel.innerHTML = messengerLabels[this.value];
             } else {
                 messengerHandleGroup.style.display = 'block';
-                messengerHandleLabel.textContent = messengerLabels[this.value];
+                messengerHandleLabel.innerHTML = messengerLabels[this.value] + ' <span style="color: hsl(0, 70%, 60%);">*</span>';
                 messengerHandleInput.setAttribute('required', 'required');
 
                 // Update placeholder

@@ -299,6 +299,28 @@ document.addEventListener('DOMContentLoaded', function () {
             if (confirm('Очистить сохранённый черновик?')) {
                 clearFormDraft();
                 form.reset();
+
+                // Reset messenger field visibility
+                const messengerHandleGroup = document.getElementById('messengerHandleGroup');
+                const messengerHandleInput = document.getElementById('messengerHandle');
+                if (messengerHandleGroup) {
+                    messengerHandleGroup.style.display = 'none';
+                }
+                if (messengerHandleInput) {
+                    messengerHandleInput.removeAttribute('required');
+                    messengerHandleInput.value = '';
+                }
+
+                // Reset to 'none' messenger
+                const noneMessenger = document.querySelector('input[name="messenger"][value="none"]');
+                if (noneMessenger) {
+                    noneMessenger.checked = true;
+                    // Delay event dispatch to ensure script.js listeners are registered
+                    setTimeout(() => {
+                        noneMessenger.dispatchEvent(new Event('change'));
+                    }, 100);
+                }
+
                 updateProgress();
             }
         });
