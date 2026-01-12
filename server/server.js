@@ -11,6 +11,7 @@ import { sendEmailNotifications } from './notifications/email.js';
 import { sendTelegramNotification } from './notifications/telegram.js';
 import * as bookingsDB from './db/bookings.js';
 import * as authDB from './db/auth.js';
+import * as scheduleDB from './db/schedule.js';
 
 // Load environment variables
 dotenv.config();
@@ -342,6 +343,73 @@ app.put('/api/bookings/:id/status', requireAuth, async (req, res) => {
         res.status(500).json({
             error: 'Failed to update booking'
         });
+    }
+});
+
+// ==========================================
+// SCHEDULE MANAGEMENT ENDPOINTS (admin only)
+// ==========================================
+
+// Get all work schedules
+app.get('/api/schedule/all', requireAuth, async (req, res) => {
+    try {
+        const schedules = await scheduleDB.getAllSchedules();
+        res.json({ schedules });
+    } catch (error) {
+        console.error('❌ Error getting schedules:', error);
+        res.status(500).json({ error: 'Failed to get schedules' });
+    }
+});
+
+// Get blocked dates
+app.get('/api/schedule/blocked-dates', requireAuth, async (req, res) => {
+    try {
+        const blockedDates = await scheduleDB.getBlockedDates();
+        res.json({ blockedDates });
+    } catch (error) {
+        console.error('❌ Error getting blocked dates:', error);
+        res.status(500).json({ error: 'Failed to get blocked dates' });
+    }
+});
+
+// Add blocked date
+app.post('/api/schedule/blocked-dates', requireAuth, async (req, res) => {
+    try {
+        const { date, reason } = req.body;
+
+        if (!date) {
+            return res.status(400).json({ error: 'Date required' });
+        }
+
+        const blockedDate = await scheduleDB.addBlockedDate(date, reason);
+        res.json({ success: true, blockedDate });
+    } catch (error) {
+        console.error('❌ Error adding blocked date:', error);
+        res.status(500).json({ error: 'Failed to add blocked date' });
+    }
+});
+
+// Remove blocked date
+app.delete('/api/schedule/blocked-dates/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        await scheduleDB.removeBlockedDate(id);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('❌ Error removing blocked date:', error);
+        res.status(500).json({ error: 'Failed to remove blocked date' });
+    }
+});
+
+// Get available slots for a date (public)
+app.get('/api/schedule/available/:date', async (req, res) => {
+    try {
+        const { date } = req.params;
+        const slots = await scheduleDB.getAvailableSlots(date);
+        res.json({ date, slots });
+    } catch (error) {
+        console.error('❌ Error getting available slots:', error);
+        res.status(500).json({ error: 'Failed to get available slots' });
     }
 });
 

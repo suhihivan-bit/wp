@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление расписанием</title>
+    <link rel="stylesheet" href="admin.css">
+    <style>
+        .schedule-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .schedule-section {
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            border: 1px solid var(--color-border);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-lg);
+            color: var(--color-text-primary);
+        }
+
+        .blocked-dates-list {
+            display: grid;
+            gap: var(--spacing-md);
+        }
+
+        .blocked-date-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md);
+            background: var(--color-bg-tertiary);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+        }
+
+        .blocked-date-info {
+            flex: 1;
+        }
+
+        .blocked-date-date {
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .blocked-date-reason {
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .add-blocked-form {
+            display: grid;
+            grid-template-columns: 1fr 2fr auto;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-input {
+            padding: var(--spacing-md);
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            color: var(--color-text-primary);
+            font-family: inherit;
+        }
+
+        .btn-add {
+            padding: var(--spacing-md) var(--spacing-xl);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-remove {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: hsl(0, 70%, 50%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: var(--spacing-lg);
+            color: var(--color-primary-light);
+            text-decoration: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-2xl);
+            color: var(--color-text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="schedule-container">
+        <a href="admin.html" class="back-link">← Вернуться в админ-панель</a>
+
+        <h1>Управление расписанием</h1>
+
+        <!-- Blocked Dates Section -->
+        <div class="schedule-section">
+            <h2 class="section-title">Заблокированные даты</h2>
+
+            <div class="add-blocked-form">
+                <input type="date" id="blockedDate" class="form-input" required>
+                <input type="text" id="blockedReason" class="form-input" placeholder="Причина (необязательно)">
+                <button onclick="addBlockedDate()" class="btn-add">Добавить</button>
+            </div>
+
+            <div id="blockedDatesList" class="blocked-dates-list">
+                <div class="empty-state">Загрузка...</div>
+            </div>
+        </div>
+
+        <!-- Future: Work Schedule Section -->
+        <!--
+        <div class="schedule-section">
+            <h2 class="section-title">Рабочее расписание</h2>
+            <p style="color: var(--color-text-secondary);">Функция в разработке...</p>
+        </div>
+        -->
+    </div>
+
+    <!-- API Client -->
+    <script src="api-client.js"></script>
+    <script type="module" src="auth.js"></script>
+
+    <script>
+        // Check auth on load
+        authAPI.checkAuth().then(status => {
+            if (!status.authenticated) {
+                window.location.href = 'login.html';
+            } else {
+                loadBlockedDates();
+            }
+        });
+
+        // Load blocked dates
+        async function loadBlockedDates() {
+            try {
+                const response = await fetch('/api/schedule/blocked-dates', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    throw new Error('Failed to load');
+                }
+
+                const data = await response.json();
+                renderBlockedDates(data.blockedDates);
+
+            } catch (error) {
+                console.error('Error loading blocked dates:', error);
+                document.getElementById('blockedDatesList').innerHTML =
+                    '<div class="empty-state">Ошибка загрузки</div>';
+            }
+        }
+
+        // Render blocked dates
+        function renderBlockedDates(dates) {
+            const container = document.getElementById('blockedDatesList');
+
+            if (dates.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет заблокированных дат</div>';
+                return;
+            }
+
+            container.innerHTML = dates.map(date => `
+                <div class="blocked-date-item">
+                    <div class="blocked-date-info">
+                        <div class="blocked-date-date">${formatDate(date.date)}</div>
+                        ${date.reason ? `<div class="blocked-date-reason">${escapeHtml(date.reason)}</div>` : ''}
+                    </div>
+                    <button onclick="removeBlockedDate(${date.id})" class="btn-remove">Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        // Add blocked date
+        async function addBlockedDate() {
+            const dateInput = document.getElementById('blockedDate');
+            const reasonInput = document.getElementById('blockedReason');
+
+            const date = dateInput.value;
+            const reason = reasonInput.value;
+
+            if (!date) {
+                alert('Выберите дату');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/schedule/blocked-dates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ date, reason })
+                });
+
+                if (!response.ok) throw new Error('Failed');
+
+                // Clear form
+                dateInput.value = '';
+                reasonInput.value = '';
+
+                // Reload list
+                loadBlockedDates();
+
+            } catch (error) {
+                console.error('Error adding blocked date:', error);
+                alert('Ошибка при добавлении');
+            }
+        }
+
+        // Remove blocked date
+        async function removeBlockedDate(id) {
+            if (!confirm('Удалить эту дату?')) return;
+
+            try {
+                const response = await fetch(`/api/schedule/blocked-dates/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed');
+
+                loadBlockedDates();
+
+            } catch (error) {
+                console.error('Error removing blocked date:', error);
+                alert('Ошибка при удалении');
+            }
+        }
+
+        // Helper functions
+        function formatDate(dateStr) {
+            const [year, month, day] = dateStr.split('-');
+            return `${day}.${month}.${year}`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+
+</html>
