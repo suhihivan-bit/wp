@@ -7,6 +7,9 @@ import express from 'express';
 import session from 'express-session';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import validator from 'validator';
 import { sendEmailNotifications } from './notifications/email.js';
 import { sendTelegramNotification } from './notifications/telegram.js';
 import * as bookingsDB from './db/bookings.js';
@@ -20,14 +23,39 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
+// Security Middleware
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "https:"],
+        }
+    },
+    crossOriginEmbedderPolicy: false
+}));
+
+// CORS
 app.use(cors({
-    origin: true,
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Body parsers with size limits
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Rate limiting for all routes
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // 100 requests per windowMs
+    message: 'Слишком много запросов, попробуйте позже'
+});
+
+app.use(generalLimiter);
 
 // Session middleware for authentication
 app.use(session({
@@ -40,6 +68,14 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
+
+// Strict rate limiting for login attempts
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // 5 attempts per windowMs
+    skipSuccessfulRequests: true, // Don't count successful logins
+    message: 'Слишком много попыток входа. Попробуйте через 15 минут'
+});
 
 // Serve static files
 app.use(express.static('public'));
@@ -89,6 +125,32 @@ app.post('/api/bookings', async (req, res) => {
             });
         }
 
+        // Validate email format
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({
+                error: 'Invalid email format'
+            });
+        }
+
+        // Validate date format (YYYY-MM-DD)
+        if (!validator.isDate(date, { format: 'YYYY-MM-DD', strictMode: true })) {
+            return res.status(400).json({
+                error: 'Invalid date format'
+            });
+        }
+
+        // Validate time format (HH:MM)
+        if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(time)) {
+            return res.status(400).json({
+                error: 'Invalid time format'
+            });
+        }
+
+        // Sanitize text inputs
+        const sanitizedFullName = validator.escape(fullName);
+        const sanitizedQuestions = questions ? validator.escape(questions) : '';
+        const sanitizedMessengerHandle = messengerHandle ? validator.escape(messengerHandle) : '';
+
         // Check if time slot is occupied
         const isOccupied = await bookingsDB.isTimeSlotOccupied(date, time);
         if (isOccupied) {
@@ -101,13 +163,13 @@ app.post('/api/bookings', async (req, res) => {
         const booking = await bookingsDB.createBooking({
             date,
             time,
-            fullName,
+            fullName: sanitizedFullName,
             email,
             phone,
             category,
             messenger: messenger || 'none',
-            messengerHandle: messengerHandle || '',
-            questions: questions || ''
+            messengerHandle: sanitizedMessengerHandle,
+            questions: sanitizedQuestions
         });
 
         console.log('✅ Booking created:', booking.id);
@@ -177,13 +239,20 @@ app.get('/api/bookings/occupied/:date', async (req, res) => {
 // ==========================================
 
 // Login
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({
                 error: 'Email and password required'
+            });
+        }
+
+        // Validate email format
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({
+                error: 'Invalid email format'
             });
         }
 
