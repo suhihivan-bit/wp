@@ -5,42 +5,284 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Управление расписанием</title>
-    <link rel="stylesheet" href="admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
     <style>
-        .schedule-container {
-            max-width: 1200px;
-            margin: 2rem auto;
+        .schedule-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(135deg, hsl(220, 25%, 10%), hsl(220, 25%, 15%));
             padding: 2rem;
         }
 
-        .schedule-section {
-            background: var(--color-bg-secondary);
-            border-radius: var(--radius-xl);
-            padding: var(--spacing-xl);
-            margin-bottom: var(--spacing-xl);
-            border: 1px solid var(--color-border);
+        .schedule-container {
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        .section-title {
+        .header-section {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: hsl(210, 100%, 70%);
+            text-decoration: none;
+            margin-bottom: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: hsl(210, 100%, 80%);
+            transform: translateX(-4px);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, hsl(210, 100%, 70%), hsl(280, 100%, 70%));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: hsl(220, 20%, 60%);
+            font-size: 1.1rem;
+        }
+
+        .schedule-grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: 1fr;
+        }
+
+        @media (min-width: 900px) {
+            .schedule-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .card {
+            background: linear-gradient(135deg, hsl(220, 25%, 18%), hsl(220, 25%, 16%));
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid hsl(220, 20%, 25%);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-title {
             font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: var(--spacing-lg);
-            color: var(--color-text-primary);
+            color: hsl(220, 20%, 95%);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            padding: 6px;
+            background: linear-gradient(135deg, hsl(210, 100%, 60%), hsl(280, 100%, 60%));
+            border-radius: 10px;
+            color: white;
+        }
+
+        /* Weekly Schedule */
+        .week-days {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .day-row {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem;
+            background: hsl(220, 25%, 14%);
+            border-radius: 12px;
+            border: 1px solid hsl(220, 20%, 20%);
+            transition: all 0.3s ease;
+        }
+
+        .day-row.active {
+            border-color: hsl(210, 100%, 50%);
+            background: linear-gradient(135deg, hsl(220, 25%, 16%), hsl(210, 80%, 15%));
+        }
+
+        .day-toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: hsl(220, 20%, 30%);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .day-toggle.active {
+            background: linear-gradient(135deg, hsl(210, 100%, 50%), hsl(280, 100%, 50%));
+        }
+
+        .day-toggle::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .day-toggle.active::after {
+            left: 27px;
+        }
+
+        .day-name {
+            font-weight: 600;
+            color: hsl(220, 20%, 70%);
+            min-width: 120px;
+        }
+
+        .day-row.active .day-name {
+            color: hsl(210, 100%, 70%);
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .time-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .time-label {
+            font-size: 0.85rem;
+            color: hsl(220, 20%, 60%);
+        }
+
+        .time-input {
+            padding: 0.5rem 0.75rem;
+            background: hsl(220, 25%, 20%);
+            border: 1px solid hsl(220, 20%, 30%);
+            border-radius: 8px;
+            color: hsl(220, 20%, 90%);
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .time-input:focus {
+            outline: none;
+            border-color: hsl(210, 100%, 50%);
+            box-shadow: 0 0 0 3px hsla(210, 100%, 50%, 0.1);
+        }
+
+        .time-input:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Break Times */
+        .breaks-list {
+            display: grid;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .break-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: hsl(220, 25%, 14%);
+            border-radius: 10px;
+            border: 1px solid hsl(220, 20%, 20%);
+        }
+
+        .break-time {
+            font-weight: 600;
+            color: hsl(220, 20%, 85%);
+        }
+
+        .break-duration {
+            font-size: 0.9rem;
+            color: hsl(220, 20%, 60%);
+            margin-top: 0.25rem;
+        }
+
+        .btn-remove {
+            padding: 0.5rem 1rem;
+            background: hsl(0, 60%, 45%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-remove:hover {
+            background: hsl(0, 60%, 55%);
+            transform: translateY(-1px);
+        }
+
+        .add-break-form {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .btn-add {
+            padding: 0.75rem;
+            background: linear-gradient(135deg, hsl(210, 100%, 50%), hsl(280, 100%, 50%));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px hsla(210, 100%, 50%, 0.3);
+        }
+
+        /* Blocked Dates */
         .blocked-dates-list {
             display: grid;
-            gap: var(--spacing-md);
+            gap: 0.75rem;
+            max-height: 400px;
+            overflow-y: auto;
         }
 
         .blocked-date-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: var(--spacing-md);
-            background: var(--color-bg-tertiary);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--color-border);
+            padding: 1rem;
+            background: hsl(220, 25%, 14%);
+            border-radius: 10px;
+            border: 1px solid hsl(220, 20%, 20%);
         }
 
         .blocked-date-info {
@@ -49,135 +291,338 @@
 
         .blocked-date-date {
             font-weight: 600;
-            color: var(--color-text-primary);
-            margin-bottom: var(--spacing-xs);
+            color: hsl(220, 20%, 85%);
+            margin-bottom: 0.25rem;
         }
 
         .blocked-date-reason {
-            color: var(--color-text-secondary);
             font-size: 0.9rem;
+            color: hsl(220, 20%, 60%);
         }
 
-        .add-blocked-form {
-            display: grid;
-            grid-template-columns: 1fr 2fr auto;
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .form-input {
-            padding: var(--spacing-md);
-            background: var(--color-bg-tertiary);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            color: var(--color-text-primary);
-            font-family: inherit;
-        }
-
-        .btn-add {
-            padding: var(--spacing-md) var(--spacing-xl);
-            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+        .save-button {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, hsl(140, 70%, 45%), hsl(160, 70%, 45%));
             color: white;
             border: none;
-            border-radius: var(--radius-md);
-            font-weight: 600;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
             cursor: pointer;
+            box-shadow: 0 10px 30px hsla(140, 70%, 45%, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
         }
 
-        .btn-remove {
-            padding: var(--spacing-sm) var(--spacing-md);
-            background: hsl(0, 70%, 50%);
-            color: white;
-            border: none;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-bottom: var(--spacing-lg);
-            color: var(--color-primary-light);
-            text-decoration: none;
+        .save-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px hsla(140, 70%, 45%, 0.5);
         }
 
         .empty-state {
             text-align: center;
-            padding: var(--spacing-2xl);
-            color: var(--color-text-secondary);
+            padding: 2rem;
+            color: hsl(220, 20%, 50%);
+            font-style: italic;
+        }
+
+        /* Scrollbar */
+        .blocked-dates-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .blocked-dates-list::-webkit-scrollbar-track {
+            background: hsl(220, 25%, 14%);
+            border-radius: 4px;
+        }
+
+        .blocked-dates-list::-webkit-scrollbar-thumb {
+            background: hsl(220, 20%, 30%);
+            border-radius: 4px;
+        }
+
+        .blocked-dates-list::-webkit-scrollbar-thumb:hover {
+            background: hsl(220, 20%, 40%);
         }
     </style>
 </head>
 
 <body>
-    <div class="schedule-container">
-        <a href="admin.html" class="back-link">← Вернуться в админ-панель</a>
-
-        <h1>Управление расписанием</h1>
-
-        <!-- Blocked Dates Section -->
-        <div class="schedule-section">
-            <h2 class="section-title">Заблокированные даты</h2>
-
-            <div class="add-blocked-form">
-                <input type="date" id="blockedDate" class="form-input" required>
-                <input type="text" id="blockedReason" class="form-input" placeholder="Причина (необязательно)">
-                <button onclick="addBlockedDate()" class="btn-add">Добавить</button>
+    <div class="schedule-wrapper">
+        <div class="schedule-container">
+            <!-- Header -->
+            <div class="header-section">
+                <a href="admin.html" class="back-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" />
+                    </svg>
+                    Вернуться в админ-панель
+                </a>
+                <h1 class="page-title">Управление расписанием</h1>
+                <p class="page-subtitle">Настройте рабочие дни, время работы и перерывы</p>
             </div>
 
-            <div id="blockedDatesList" class="blocked-dates-list">
-                <div class="empty-state">Загрузка...</div>
-            </div>
-        </div>
+            <div class="schedule-grid">
+                <!-- Left Column: Work Schedule -->
+                <div>
+                    <!-- Weekly Schedule Card -->
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <h2 class="card-title">
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none">
+                                <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor"
+                                    stroke-width="2" />
+                                <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            Рабочие дни и часы
+                        </h2>
 
-        <!-- Future: Work Schedule Section -->
-        <!--
-        <div class="schedule-section">
-            <h2 class="section-title">Рабочее расписание</h2>
-            <p style="color: var(--color-text-secondary);">Функция в разработке...</p>
+                        <div class="week-days" id="weekDays">
+                            <!-- Will be populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Break Times Card -->
+                    <div class="card">
+                        <h2 class="card-title">
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                                <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                            Перерывы
+                        </h2>
+
+                        <div class="breaks-list" id="breaksList">
+                            <div class="empty-state">Перерывов нет</div>
+                        </div>
+
+                        <div class="add-break-form">
+                            <div class="form-row">
+                                <input type="time" id="breakStart" class="time-input" placeholder="Начало">
+                                <input type="time" id="breakEnd" class="time-input" placeholder="Конец">
+                            </div>
+                            <button onclick="addBreak()" class="btn-add">+ Добавить перерыв</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Blocked Dates -->
+                <div class="card">
+                    <h2 class="card-title">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                            <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                        Выходные дни
+                    </h2>
+
+                    <div class="add-break-form" style="margin-bottom: 1.5rem;">
+                        <input type="date" id="blockedDate" class="time-input">
+                        <input type="text" id="blockedReason" class="time-input" placeholder="Причина (необязательно)">
+                        <button onclick="addBlockedDate()" class="btn-add">+ Заблокировать</button>
+                    </div>
+
+                    <div class="blocked-dates-list" id="blockedDatesList">
+                        <div class="empty-state">Загрузка...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <button class="save-button" onclick="saveSchedule()">
+                💾 Сохранить расписание
+            </button>
         </div>
-        -->
     </div>
 
-    <!-- API Client -->
     <script src="api-client.js"></script>
     <script type="module" src="auth.js"></script>
 
     <script>
-        // Check auth on load
+        const DAYS = [
+            { id: 1, name: 'Понедельник', short: 'ПН' },
+            { id: 2, name: 'Вторник', short: 'ВТ' },
+            { id: 3, name: 'Среда', short: 'СР' },
+            { id: 4, name: 'Четверг', short: 'ЧТ' },
+            { id: 5, name: 'Пятница', short: 'ПТ' },
+            { id: 6, name: 'Суббота', short: 'СБ' },
+            { id: 7, name: 'Воскресенье', short: 'ВС' }
+        ];
+
+        let schedule = {};
+        let breaks = [];
+
+        // Check auth
         authAPI.checkAuth().then(status => {
             if (!status.authenticated) {
                 window.location.href = 'login.html';
             } else {
+                initSchedule();
                 loadBlockedDates();
             }
         });
 
-        // Load blocked dates
+        // Initialize schedule UI
+        function initSchedule() {
+            const container = document.getElementById('weekDays');
+
+            container.innerHTML = DAYS.map(day => `
+                <div class="day-row" id="day-${day.id}" data-active="false">
+                    <div class="day-toggle" onclick="toggleDay(${day.id})"></div>
+                    <div class="day-name">${day.name}</div>
+                    <div class="time-inputs">
+                        <div class="time-group">
+                            <span class="time-label">С</span>
+                            <input type="time" 
+                                   id="start-${day.id}" 
+                                   class="time-input" 
+                                   value="09:00"
+                                   disabled
+                                   onchange="updateDayTime(${day.id})">
+                        </div>
+                        <div class="time-group">
+                            <span class="time-label">До</span>
+                            <input type="time" 
+                                   id="end-${day.id}" 
+                                   class="time-input" 
+                                   value="18:00"
+                                   disabled
+                                   onchange="updateDayTime(${day.id})">
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Enable Monday-Friday by default
+            [1, 2, 3, 4, 5].forEach(dayId => toggleDay(dayId));
+        }
+
+        // Toggle day active/inactive
+        function toggleDay(dayId) {
+            const row = document.getElementById(`day-${dayId}`);
+            const toggle = row.querySelector('.day-toggle');
+            const startInput = document.getElementById(`start-${dayId}`);
+            const endInput = document.getElementById(`end-${dayId}`);
+
+            const isActive = row.dataset.active === 'true';
+            const newActive = !isActive;
+
+            row.dataset.active = newActive;
+            row.classList.toggle('active', newActive);
+            toggle.classList.toggle('active', newActive);
+
+            startInput.disabled = !newActive;
+            endInput.disabled = !newActive;
+
+            if (newActive) {
+                schedule[dayId] = {
+                    start: startInput.value,
+                    end: endInput.value
+                };
+            } else {
+                delete schedule[dayId];
+            }
+        }
+
+        // Update day time
+        function updateDayTime(dayId) {
+            const startInput = document.getElementById(`start-${dayId}`);
+            const endInput = document.getElementById(`end-${dayId}`);
+
+            schedule[dayId] = {
+                start: startInput.value,
+                end: endInput.value
+            };
+        }
+
+        // Add break
+        function addBreak() {
+            const startInput = document.getElementById('breakStart');
+            const endInput = document.getElementById('breakEnd');
+
+            const start = startInput.value;
+            const end = endInput.value;
+
+            if (!start || !end) {
+                alert('Укажите начало и конец перерыва');
+                return;
+            }
+
+            breaks.push({ start, end });
+            renderBreaks();
+
+            startInput.value = '';
+            endInput.value = '';
+        }
+
+        // Render breaks
+        function renderBreaks() {
+            const container = document.getElementById('breaksList');
+
+            if (breaks.length === 0) {
+                container.innerHTML = '<div class="empty-state">Перерывов нет</div>';
+                return;
+            }
+
+            container.innerHTML = breaks.map((b, i) => {
+                const duration = calculateDuration(b.start, b.end);
+                return `
+                    <div class="break-item">
+                        <div>
+                            <div class="break-time">${b.start} - ${b.end}</div>
+                            <div class="break-duration">${duration} мин</div>
+                        </div>
+                        <button onclick="removeBreak(${i})" class="btn-remove">Удалить</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Remove break
+        function removeBreak(index) {
+            breaks.splice(index, 1);
+            renderBreaks();
+        }
+
+        // Calculate duration
+        function calculateDuration(start, end) {
+            const [sh, sm] = start.split(':').map(Number);
+            const [eh, em] = end.split(':').map(Number);
+            return ((eh * 60 + em) - (sh * 60 + sm));
+        }
+
+        // Save schedule
+        async function saveSchedule() {
+            console.log('Schedule:', schedule);
+            console.log('Breaks:', breaks);
+
+            // TODO: Send to API
+            alert('Расписание сохранено!\n(Сохранение в БД будет добавлено)');
+        }
+
+        // Blocked dates functions (same as before)
         async function loadBlockedDates() {
             try {
                 const response = await fetch('/api/schedule/blocked-dates', {
                     credentials: 'include'
                 });
 
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        window.location.href = 'login.html';
-                        return;
-                    }
-                    throw new Error('Failed to load');
-                }
+                if (!response.ok) throw new Error('Failed');
 
                 const data = await response.json();
                 renderBlockedDates(data.blockedDates);
 
             } catch (error) {
-                console.error('Error loading blocked dates:', error);
+                console.error('Error:', error);
                 document.getElementById('blockedDatesList').innerHTML =
                     '<div class="empty-state">Ошибка загрузки</div>';
             }
         }
 
-        // Render blocked dates
         function renderBlockedDates(dates) {
             const container = document.getElementById('blockedDatesList');
 
@@ -192,12 +637,11 @@
                         <div class="blocked-date-date">${formatDate(date.date)}</div>
                         ${date.reason ? `<div class="blocked-date-reason">${escapeHtml(date.reason)}</div>` : ''}
                     </div>
-                    <button onclick="removeBlockedDate(${date.id})" class="btn-remove">Удалить</button>
+                    <button onclick="removeBlockedDate(${date.id})" class="btn-remove">×</button>
                 </div>
             `).join('');
         }
 
-        // Add blocked date
         async function addBlockedDate() {
             const dateInput = document.getElementById('blockedDate');
             const reasonInput = document.getElementById('blockedReason');
@@ -220,23 +664,16 @@
 
                 if (!response.ok) throw new Error('Failed');
 
-                // Clear form
                 dateInput.value = '';
                 reasonInput.value = '';
-
-                // Reload list
                 loadBlockedDates();
 
             } catch (error) {
-                console.error('Error adding blocked date:', error);
                 alert('Ошибка при добавлении');
             }
         }
 
-        // Remove blocked date
         async function removeBlockedDate(id) {
-            if (!confirm('Удалить эту дату?')) return;
-
             try {
                 const response = await fetch(`/api/schedule/blocked-dates/${id}`, {
                     method: 'DELETE',
@@ -244,16 +681,13 @@
                 });
 
                 if (!response.ok) throw new Error('Failed');
-
                 loadBlockedDates();
 
             } catch (error) {
-                console.error('Error removing blocked date:', error);
                 alert('Ошибка при удалении');
             }
         }
 
-        // Helper functions
         function formatDate(dateStr) {
             const [year, month, day] = dateStr.split('-');
             return `${day}.${month}.${year}`;
