@@ -1,8 +1,8 @@
 // ==========================================
-// FIREBASE AUTHENTICATION MODULE
+// AUTHENTICATION MODULE (PostgreSQL API)
 // ==========================================
 
-import { auth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from './firebase-config.js';
+// authAPI is loaded globally from api-client.js
 
 // ==========================================
 // AUTHENTICATION FUNCTIONS
@@ -16,12 +16,12 @@ import { auth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from '.
  */
 export async function loginAdmin(email, password) {
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        console.log('✅ Admin logged in:', userCredential.user.email);
-        return userCredential.user;
+        const result = await authAPI.login(email, password);
+        console.log('✅ Admin logged in:', result.user.email);
+        return result.user;
     } catch (error) {
         console.error('❌ Login error:', error);
-        throw translateAuthError(error);
+        throw new Error(error.message || 'Неверный email или пароль');
     }
 }
 
@@ -31,7 +31,7 @@ export async function loginAdmin(email, password) {
  */
 export async function logoutAdmin() {
     try {
-        await signOut(auth);
+        await authAPI.logout();
         console.log('✅ Admin logged out');
     } catch (error) {
         console.error('❌ Logout error:', error);
@@ -40,128 +40,106 @@ export async function logoutAdmin() {
 }
 
 /**
- * Check authentication state and call callback with user
- * @param {Function} callback - Called with user object or null
- * @returns {Function} Unsubscribe function
+ * Check authentication status
+ * @returns {Promise<Object>} Auth status object
  */
-export function checkAuthState(callback) {
-    return onAuthStateChanged(auth, (user) => {
-        callback(user);
-    });
+export async function checkAuthStatus() {
+    try {
+        return await authAPI.checkAuth();
+    } catch (error) {
+        console.error('❌ Auth check error:', error);
+        return { authenticated: false };
+    }
 }
 
 /**
  * Get current authenticated user
- * @returns {Object|null} Current user or null
+ * @returns {Promise<Object|null>} Current user or null
  */
-export function getCurrentUser() {
-    return auth.currentUser;
-}
-
-/**
- * Check if user is authenticated
- * @returns {boolean} True if authenticated
- */
-export function isAuthenticated() {
-    return auth.currentUser !== null;
+export async function getCurrentUser() {
+    const status = await checkAuthStatus();
+    return status.authenticated ? status.user : null;
 }
 
 // ==========================================
-// ERROR TRANSLATION
+// LOGIN PAGE LOGIC (if on login.html)
 // ==========================================
 
-/**
- * Translate Firebase auth errors to Russian
- * @param {Error} error - Firebase error
- * @returns {Error} Error with translated message
- */
-function translateAuthError(error) {
-    const errorMessages = {
-        'auth/wrong-password': 'Неверный пароль',
-        'auth/user-not-found': 'Пользователь с таким email не найден',
-        'auth/invalid-email': 'Некорректный формат email',
-        'auth/user-disabled': 'Этот аккаунт заблокирован',
-        'auth/too-many-requests': 'Слишком много попыток входа. Попробуйте позже',
-        'auth/network-request-failed': 'Ошибка сети. Проверьте подключение к интернету',
-        'auth/invalid-credential': 'Неверные данные для входа',
-        'auth/operation-not-allowed': 'Операция не разрешена',
-        'auth/weak-password': 'Слишком простой пароль'
-    };
-
-    const translatedMessage = errorMessages[error.code] || 'Ошибка входа. Попробуйте снова';
-
-    const translatedError = new Error(translatedMessage);
-    translatedError.code = error.code;
-    translatedError.originalError = error;
-
-    return translatedError;
-}
-
-// ==========================================
-// LOGIN PAGE LOGIC
-// ==========================================
-
-// Only run if on login page
 if (window.location.pathname.includes('login.html')) {
-    console.log('🔐 Initializing login page...');
-
     // Check if already logged in
-    checkAuthState((user) => {
-        if (user) {
-            console.log('✅ Already logged in, redirecting to admin panel...');
+    checkAuthStatus().then(status => {
+        if (status.authenticated) {
+            // Already logged in, redirect to admin
             window.location.href = 'admin.html';
         }
     });
 
-    // Handle login form submission
     const loginForm = document.getElementById('loginForm');
     const errorMessage = document.getElementById('errorMessage');
-    const loginButton = document.getElementById('loginButton');
-    const emailInput = document.getElementById('email') || document.getElementById('username');
-    const passwordInput = document.getElementById('password');
+    const submitButton = document.querySelector('.login-button');
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const email = emailInput.value.trim();
-            const password = passwordInput.value;
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
 
-            // Hide error
+            // Hide previous errors
             if (errorMessage) {
-                errorMessage.classList.remove('active');
-                errorMessage.textContent = '';
+                errorMessage.classList.remove('visible');
             }
 
-            // Disable button
-            if (loginButton) {
-                loginButton.disabled = true;
-                loginButton.textContent = 'Вход...';
-            }
+            // Disable submit button
+            submitButton.disabled = true;
+            submitButton.textContent = 'Вход...';
 
             try {
                 await loginAdmin(email, password);
-                // Redirect will happen automatically via onAuthStateChanged
+
+                // Success - redirect to admin panel
                 window.location.href = 'admin.html';
+
             } catch (error) {
-                // Show error
+                // Show error message
                 if (errorMessage) {
                     errorMessage.textContent = error.message;
-                    errorMessage.classList.add('active');
+                    errorMessage.classList.add('visible');
                 }
 
-                // Re-enable button
-                if (loginButton) {
-                    loginButton.disabled = false;
-                    loginButton.textContent = 'Войти';
-                }
-
-                // Clear password
-                passwordInput.value = '';
-                passwordInput.focus();
+                // Re-enable submit button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Войти';
             }
         });
     }
 }
 
-console.log('✅ Auth module loaded');
+// ==========================================
+// ADMIN PAGE AUTH CHECK (if on admin.html)
+// ==========================================
+
+if (window.location.pathname.includes('admin.html')) {
+    // Check authentication on page load
+    checkAuthStatus().then(status => {
+        if (!status.authenticated) {
+            // Not logged in, redirect to login page
+            window.location.href = 'login.html';
+        }
+    });
+
+    // Handle logout button
+    const logoutButton = document.getElementById('logoutBtn');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', async () => {
+            try {
+                await logoutAdmin();
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout failed:', error);
+                // Force redirect anyway
+                window.location.href = 'login.html';
+            }
+        });
+    }
+}

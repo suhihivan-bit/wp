@@ -1,7 +1,8 @@
 // ==========================================
-// FIREBASE IMPORT
+// API CLIENT (replaces Firebase)
 // ==========================================
-import { db, collection, addDoc, getDocs, query, where, Timestamp, COLLECTIONS } from './firebase-config.js';
+// bookingAPI and authAPI are loaded globally from api-client.js
+
 
 // ==========================================
 // BOOKING MANAGEMENT SYSTEM
@@ -16,102 +17,48 @@ function getBookingsFromLocalStorage() {
     return bookings ? JSON.parse(bookings) : [];
 }
 
-// Save booking to Firebase Firestore
+// Save booking via REST API
 async function saveBooking(date, time, formData) {
     try {
-        // Save to Firestore
-        const docRef = await addDoc(collection(db, COLLECTIONS.BOOKINGS), {
-            // Дата и время
-            date: date,
-            time: time,
-
-            // Личные данные
+        const result = await bookingAPI.createBooking({
+            date,
+            time,
             fullName: formData.fullName,
             email: formData.email,
             phone: formData.phone,
-
-            // Категория
             category: formData.category,
-
-            // Мессенджер
             messenger: formData.messenger,
             messengerHandle: formData.messengerHandle || '',
-
-            // Вопросы
-            questions: formData.questions || '',
-
-            // Метаданные
-            status: 'pending',
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now()
+            questions: formData.questions || ''
         });
 
-        console.log('✅ Booking saved to Firebase with ID:', docRef.id);
-        return docRef.id;
+        console.log('✅ Booking saved via API:', result.booking.id);
+        return result.booking.id;
 
     } catch (error) {
-        console.error('❌ Error saving to Firebase:', error);
-
-        // Fallback to localStorage if Firebase fails
-        const localBookings = getBookingsFromLocalStorage();
-        localBookings.push({
-            date: date,
-            time: time,
-            data: formData,
-            timestamp: new Date().toISOString()
-        });
-        localStorage.setItem(BOOKINGS_KEY, JSON.stringify(localBookings));
-
+        console.error('❌ Error saving booking:', error);
         throw new Error('Не удалось сохранить запись. Попробуйте ещё раз.');
     }
 }
 
-// Check if time slot is occupied (from Firestore)
+// Check if time slot is occupied (via API)
 async function isTimeSlotOccupied(date, time) {
     try {
-        const q = query(
-            collection(db, COLLECTIONS.BOOKINGS),
-            where('date', '==', date),
-            where('time', '==', time),
-            where('status', '!=', 'cancelled')
-        );
-
-        const querySnapshot = await getDocs(q);
-        return !querySnapshot.empty;
-
+        const occupiedTimes = await bookingAPI.getOccupiedTimes(date);
+        return occupiedTimes.includes(time);
     } catch (error) {
         console.error('❌ Error checking time slot:', error);
-        // Fallback to localStorage
-        const localBookings = getBookingsFromLocalStorage();
-        return localBookings.some(booking => booking.date === date && booking.time === time);
+        return false; // Allow booking on error
     }
 }
 
-// Get occupied times for a specific date (from Firestore)
+// Get occupied times for a specific date (via API)
 async function getOccupiedTimesForDate(date) {
     try {
-        const q = query(
-            collection(db, COLLECTIONS.BOOKINGS),
-            where('date', '==', date),
-            where('status', '!=', 'cancelled')
-        );
-
-        const querySnapshot = await getDocs(q);
-        const occupiedTimes = [];
-
-        querySnapshot.forEach((doc) => {
-            occupiedTimes.push(doc.data().time);
-        });
-
-        return occupiedTimes;
-
+        return await bookingAPI.getOccupiedTimes(date);
     } catch (error) {
         console.error('❌ Error getting occupied times:', error);
-        // Fallback to localStorage
-        const localBookings = getBookingsFromLocalStorage();
-        return localBookings
-            .filter(booking => booking.date === date)
-            .map(booking => booking.time);
+        return []; // Return empty array on error
     }
 }
 
