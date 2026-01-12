@@ -138,7 +138,6 @@ const bookingAPI = new BookingAPI();
 const authAPI = new AuthAPI();
 
 // For ES6 modules
-export { bookingAPI, authAPI };
 
 // For global scope (if not using modules)
 if (typeof window !== 'undefined') {
